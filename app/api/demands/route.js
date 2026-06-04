@@ -27,7 +27,6 @@ export async function POST(request) {
     await connectDB();
 
     const body = await request.json();
-    console.log("BODY RECIBIDO EN POST /api/demands:", body);
 
     const {
       name,
@@ -73,6 +72,14 @@ export async function POST(request) {
       plannedStartDate: new Date(plannedStartDate),
       plannedEndDate: new Date(plannedEndDate),
       state: "Nuevo",
+      pendingTasks: [],
+      funding: {
+        budget: 0,
+        spent: 0,
+        source: "",
+      },
+      risks: "",
+      notes: "",
     });
 
     return NextResponse.json(demand, { status: 201 });

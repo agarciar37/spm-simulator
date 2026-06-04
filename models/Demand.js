@@ -1,6 +1,61 @@
 import mongoose from "mongoose";
 import { DEMAND_STATES } from "@/lib/transitions";
 
+const TaskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    responsible: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    dueDate: {
+      type: Date,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["Pendiente", "En curso", "Bloqueada", "Completada"],
+      default: "Pendiente",
+    },
+  },
+  { _id: false }
+);
+
+const FinancingSchema = new mongoose.Schema(
+  {
+    concept: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    amount: {
+      type: Number,
+      default: 0,
+    },
+    provider: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    status: {
+      type: String,
+      enum: ["Pendiente", "Solicitada", "Aprobada", "Rechazada"],
+      default: "Pendiente",
+    },
+  },
+  { _id: false }
+);
+
 const DemandSchema = new mongoose.Schema(
   {
     code: {
@@ -51,6 +106,24 @@ const DemandSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
       default: null,
+    },
+    tasks: {
+      type: [TaskSchema],
+      default: [],
+    },
+    financing: {
+      type: [FinancingSchema],
+      default: [],
+    },
+    risks: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   {

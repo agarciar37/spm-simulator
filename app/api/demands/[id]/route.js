@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Demand from "@/models/Demand";
-import Project from "@/models/Project";
+
+function normalizePendingTasks(tasks) {
+  if (!Array.isArray(tasks)) return [];
+
+  return tasks
+    .map((task) => ({
+      title: String(task.title || "").trim(),
+      done: Boolean(task.done),
+    }))
+    .filter((task) => task.title.length > 0);
+}
 
 export async function GET(_request, { params }) {
   try {
@@ -29,6 +39,7 @@ export async function GET(_request, { params }) {
 export async function PUT(request, { params }) {
   try {
     await connectDB();
+
     const { id } = await params;
     const body = await request.json();
 
@@ -41,13 +52,6 @@ export async function PUT(request, { params }) {
       );
     }
 
-    if (demand.state === "Aprobado") {
-      return NextResponse.json(
-        { error: "No se puede editar una demanda aprobada" },
-        { status: 400 }
-      );
-    }
-
     const {
       name,
       description,
@@ -56,6 +60,10 @@ export async function PUT(request, { params }) {
       priority,
       plannedStartDate,
       plannedEndDate,
+      pendingTasks,
+      funding,
+      risks,
+      notes,
     } = body;
 
     if (
@@ -72,13 +80,28 @@ export async function PUT(request, { params }) {
       );
     }
 
+    if (new Date(plannedStartDate) > new Date(plannedEndDate)) {
+      return NextResponse.json(
+        { error: "La fecha de inicio no puede ser posterior a la fecha de fin" },
+        { status: 400 }
+      );
+    }
+
     demand.name = name;
     demand.description = description;
     demand.requestedBy = requestedBy;
     demand.department = department;
     demand.priority = priority || "Media";
-    demand.plannedStartDate = plannedStartDate;
-    demand.plannedEndDate = plannedEndDate;
+    demand.plannedStartDate = new Date(plannedStartDate);
+    demand.plannedEndDate = new Date(plannedEndDate);
+    demand.pendingTasks = normalizePendingTasks(pendingTasks);
+    demand.funding = {
+      budget: Number(funding?.budget || 0),
+      spent: Number(funding?.spent || 0),
+      source: funding?.source || "",
+    };
+    demand.risks = risks || "";
+    demand.notes = notes || "";
 
     await demand.save();
 
@@ -97,8 +120,8 @@ export async function PUT(request, { params }) {
 export async function DELETE(_request, { params }) {
   try {
     await connectDB();
-    const { id } = await params;
 
+    const { id } = await params;
     const demand = await Demand.findById(id);
 
     if (!demand) {

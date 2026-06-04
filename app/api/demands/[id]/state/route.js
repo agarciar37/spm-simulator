@@ -30,9 +30,7 @@ export async function PATCH(request, { params }) {
 
     if (!isValidTransition(demand.state, state, demandTransitions)) {
       return NextResponse.json(
-        {
-          error: `Transición no permitida de ${demand.state} a ${state}`,
-        },
+        { error: `Transición no permitida de ${demand.state} a ${state}` },
         { status: 400 }
       );
     }
@@ -57,6 +55,10 @@ export async function PATCH(request, { params }) {
         plannedStartDate: demand.plannedStartDate,
         plannedEndDate: demand.plannedEndDate,
         state: "Planificación",
+        tasks: demand.tasks || [],
+        financing: demand.financing || [],
+        risks: demand.risks || "",
+        notes: demand.notes || "",
       });
 
       demand.generatedProjectId = project._id;

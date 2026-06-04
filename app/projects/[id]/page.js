@@ -1,15 +1,16 @@
 import Link from "next/link";
+import connectDB from "@/lib/mongodb";
+import Project from "@/models/Project";
+import DetailWorkspace from "@/components/DetailWorkspace";
 
 async function getProject(id) {
-  const response = await fetch(`http://localhost:3000/api/projects/${id}`, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
+  try {
+    await connectDB();
+    const project = await Project.findById(id).populate("demandId").lean();
+    return project ? JSON.parse(JSON.stringify(project)) : null;
+  } catch {
     return null;
   }
-
-  return response.json();
 }
 
 function formatDate(value) {
@@ -44,27 +45,58 @@ export default async function ProjectDetailPage({ params }) {
             <p className="subtitle">{project.name}</p>
           </div>
 
-          <Link href="/" className="link-button">
-            Volver al inicio
-          </Link>
+          <div className="actions">
+            {project.demandId?._id && (
+              <Link
+                href={`/demands/${project.demandId._id}`}
+                className="link-button"
+              >
+                Ver demanda origen
+              </Link>
+            )}
+
+            <Link href="/" className="link-button secondary-link">
+              Volver al inicio
+            </Link>
+          </div>
         </div>
 
         <div className="detail-grid">
           <div className="detail-card">
             <h3>Información general</h3>
-            <p><strong>Nombre:</strong> {project.name}</p>
-            <p><strong>Descripción:</strong> {project.description}</p>
-            <p><strong>Solicitado por:</strong> {project.requestedBy}</p>
-            <p><strong>Departamento:</strong> {project.department}</p>
-            <p><strong>Prioridad:</strong> {project.priority}</p>
-            <p><strong>Estado:</strong> {project.state}</p>
+            <p>
+              <strong>Nombre:</strong> {project.name}
+            </p>
+            <p>
+              <strong>Descripción:</strong> {project.description}
+            </p>
+            <p>
+              <strong>Solicitado por:</strong> {project.requestedBy}
+            </p>
+            <p>
+              <strong>Departamento:</strong> {project.department}
+            </p>
+            <p>
+              <strong>Prioridad:</strong> {project.priority}
+            </p>
+            <p>
+              <strong>Estado:</strong> {project.state}
+            </p>
           </div>
 
           <div className="detail-card">
             <h3>Planificación</h3>
-            <p><strong>Inicio previsto:</strong> {formatDate(project.plannedStartDate)}</p>
-            <p><strong>Fin previsto:</strong> {formatDate(project.plannedEndDate)}</p>
-            <p><strong>Creado el:</strong> {formatDate(project.createdAt)}</p>
+            <p>
+              <strong>Inicio previsto:</strong>{" "}
+              {formatDate(project.plannedStartDate)}
+            </p>
+            <p>
+              <strong>Fin previsto:</strong>{" "}
+              {formatDate(project.plannedEndDate)}
+            </p>
+            <p>
+              <strong>Creado el:</strong> {formatDate(project.createdAt)}
+            </p>
             <p>
               <strong>Demanda origen:</strong>{" "}
               {project.demandId?.code || "No disponible"}
@@ -72,6 +104,8 @@ export default async function ProjectDetailPage({ params }) {
           </div>
         </div>
       </section>
+
+      <DetailWorkspace type="project" record={project} />
     </main>
   );
 }
