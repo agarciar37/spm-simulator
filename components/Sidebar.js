@@ -33,7 +33,6 @@ export default function Sidebar() {
 
       <div className="sidebar-footer">
         <p>Álvaro García</p>
-        <span>Next.js + MongoDB</span>
       </div>
     </aside>
   );
